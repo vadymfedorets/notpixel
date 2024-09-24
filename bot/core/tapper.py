@@ -197,17 +197,43 @@ class Tapper:
             logger.error(f"{self.session_name} | Unknown error when processing balance: {error}")
             await asyncio.sleep(delay=3)
 
+    async def tasks(self, http_client: aiohttp.ClientSession):
+        try:
+            stats = await http_client.get('https://notpx.app/api/v1/mining/status')
+            stats.raise_for_status()
+            stats_json = await stats.json()
+            done_task_list = stats_json['tasks'].keys()
+            logger.debug(done_task_list)
+            for task in settings.TASK_TO_DO:
+                if task not in done_task_list:
+                    tasks_status = await http_client.get(f'https://notpx.app/api/v1/mining/task/check/{task}')
+                    tasks_status.raise_for_status()
+                    tasks_status_json = await tasks_status.json()
+                    status = tasks_status_json[task]
+                    if status:
+                        logger.success(f"{self.session_name} | Task requirements met. Task {task} completed")
+                        current_balance = await self.get_balance(http_client)
+                        logger.info(f"{self.session_name} | Current balance: {current_balance}")
+                    else:
+                        logger.warning(f"{self.session_name} | Task requirements were not met {task}")
+                    await asyncio.sleep(delay=randint(3, 7))
+
+        except Exception as error:
+            logger.error(f"{self.session_name} | Unknown error when processing tasks: {error}")
+
+
     async def paint(self, http_client: aiohttp.ClientSession):
         try:
             stats = await http_client.get('https://notpx.app/api/v1/mining/status')
             stats.raise_for_status()
             stats_json = await stats.json()
             charges = stats_json['charges']
+            colors = ("#9C6926", "#00CCC0", "#bf4300",
+                      "#FFFFFF", "#000000", "#6D001A")
+            color = random.choice(colors)
 
             for _ in range(charges):
-                colors = ("#9C6926", "#00CCC0")
                 x, y = randint(30, 970), randint(30, 970)
-                color = random.choice(colors)
                 paint_request = await http_client.post('https://notpx.app/api/v1/repaint/start',
                                                        json={"pixelId": int(f"{x}{y}")+1, "newColor": color})
                 paint_request.raise_for_status()
@@ -230,7 +256,7 @@ class Tapper:
                         try:
                             upgrade_req = await http_client.get(f'https://notpx.app/api/v1/mining/boost/check/{name}')
                             upgrade_req.raise_for_status()
-                            logger.info(f"{self.session_name} | Upgraded boost: {name}")
+                            logger.success(f"{self.session_name} | Upgraded boost: {name}")
                             await asyncio.sleep(delay=randint(2, 5))
                         except Exception as error:
                             logger.warning(f"{self.session_name} | Not enough money to keep upgrading.")
@@ -243,9 +269,20 @@ class Tapper:
 
     async def claim(self, http_client: aiohttp.ClientSession):
         try:
-            response = await http_client.get(f'https://notpx.app/api/v1/mining/claim')
+            logger.info(f"{self.session_name} | Claiming mine")
+            response = await http_client.get(f'https://notpx.app/api/v1/mining/status')
             response.raise_for_status()
             response_json = await response.json()
+            await asyncio.sleep(delay=5)
+            for _ in range(2):
+                try:
+                    response = await http_client.get(f'https://notpx.app/api/v1/mining/claim')
+                    response.raise_for_status()
+                    response_json = await response.json()
+                except Exception as error:
+                    logger.info(f"{self.session_name} | First claiming not always successful, retrying..")
+                else:
+                    break
 
             return response_json['claimed']
         except Exception as error:
@@ -294,7 +331,7 @@ class Tapper:
                         balance = await self.get_balance(http_client)
                         logger.info(f"{self.session_name} | Balance: <e>{balance}</e>")
 
-                        if settings.AUTO_TASK:
+                        if settings.AUTO_DRAW:
                             await self.paint(http_client=http_client)
 
                         if settings.AUTO_UPGRADE:
@@ -303,6 +340,11 @@ class Tapper:
                         if settings.CLAIM_REWARD:
                             reward_status = await self.claim(http_client=http_client)
                             logger.info(f"{self.session_name} | Claim reward: {reward_status}")
+
+                        if settings.AUTO_TASK:
+                            logger.info(f"{self.session_name} | Auto task started")
+                            await self.tasks(http_client=http_client)
+                            logger.info(f"{self.session_name} | Auto task finished")
 
                         logger.info(f"{self.session_name} | Sleep <y>{round(sleep_time / 60, 1)}</y> min")
                         await asyncio.sleep(delay=sleep_time)

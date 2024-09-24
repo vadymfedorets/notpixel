@@ -98,6 +98,10 @@ async def process() -> None:
     if not action:
         print('\033[1m' + '\033[92m' + art_work + '\033[0m')
         print('\033[1m' + '\033[93m' + version + '\033[0m')
+
+        if settings.AUTO_TASK:
+            logger.warning("Auto Task is enabled, it is dangerous functional")
+
         print(start_text)
 
         while True:
