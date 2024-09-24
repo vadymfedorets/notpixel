@@ -16,5 +16,7 @@ class Settings(BaseSettings):
     REF_ID: str = 'f464869246'
     IGNORED_BOOSTS: list[str] = ['INVITE_FRIENDS', 'TON_TRANSACTION', 'BOOST_CHANNEL', 'ACTIVITY_CHALLENGE', 'CONNECT_WALLET']
 
+    USE_PROXY_FROM_FILE: bool = False
+
 
 settings = Settings()
