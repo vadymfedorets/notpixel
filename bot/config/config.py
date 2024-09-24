@@ -9,7 +9,9 @@ class Settings(BaseSettings):
 
     SLEEP_TIME: list[int] = [7200, 10800]
     START_DELAY: list[int] = [5, 25]
-    AUTO_TASK: bool = True
+    AUTO_TASK: bool = False
+    TASKS_TO_DO: list[str] = ["x:notcoin", "x:notpixel", "paint20pixels", "leagueBonusSilver", "invite3frens", "leagueBonusGold"]
+    AUTO_DRAW: bool = True
     JOIN_TG_CHANNELS: bool = True
     CLAIM_REWARD: bool = True
     AUTO_UPGRADE: bool = True
