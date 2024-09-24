@@ -1,3 +1,7 @@
+[![Static Badge](https://img.shields.io/badge/Telegram-Channel-Link?style=for-the-badge&logo=Telegram&logoColor=white&logoSize=auto&color=blue)](https://t.me/hidden_coding)
+
+[![Static Badge](https://img.shields.io/badge/Telegram-Chat-yes?style=for-the-badge&logo=Telegram&logoColor=white&logoSize=auto&color=blue)](https://t.me/hidden_codding_chat)
+
 [![Static Badge](https://img.shields.io/badge/Telegram-Bot%20Link-Link?style=for-the-badge&logo=Telegram&logoColor=white&logoSize=auto&color=blue)](https://t.me/notpixel/app?startapp=f464869246)
 
 ## Recommendation before use
@@ -24,8 +28,9 @@
 | **SLEEP_TIME**          |           Sleep time between cycles (by default - [7200, 10800])            |
 | **START_DELAY**         |            Delay between sessions at start (by default - [5, 25])           |
 | **AUTO_TASK**           |                         Auto tasks (default - True)                         |
-| **JOIN_CHANNELS**       |              Auto-join for tg channels tasks (default - True)               |
+| **AUTO_UPGRADE**        |              Auto-join for tg channels tasks (default - True)               |
 | **CLAIM_REWARD**        |                             Claim daily reward                              |
+| **REF_ID**              |                      Thing that goes after startapp=                        |
 
 ## Quick Start 📚
 
@@ -41,7 +46,7 @@ Before you begin, make sure you have the following installed:
 3. Record the API_ID and API_HASH provided after registering your application in the .env file.
 
 ## Installation
-You can download the [**repository**](https://github.com/vadymfedorets/CatsvsDogs) by cloning it to your system and installing the necessary dependencies:
+You can download the [**repository**](https://github.com/vadymfedorets/notpixel) by cloning it to your system and installing the necessary dependencies:
 ```shell
 git clone https://github.com/vadymfedorets/CatsvsDogs
 ```
