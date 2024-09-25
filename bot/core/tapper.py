@@ -163,7 +163,7 @@ class Tapper:
             stats.raise_for_status()
             stats_json = await stats.json()
             done_task_list = stats_json['tasks'].keys()
-            logger.debug(done_task_list)
+            #logger.debug(done_task_list)
             for task in settings.TASKS_TO_DO:
                 if task not in done_task_list:
                     tasks_status = await http_client.get(f'https://notpx.app/api/v1/mining/task/check/{task}')
@@ -298,9 +298,6 @@ class Tapper:
                         if settings.AUTO_DRAW:
                             await self.paint(http_client=http_client)
 
-                        if settings.AUTO_UPGRADE:
-                            reward_status = await self.upgrade(http_client=http_client)
-
                         if settings.CLAIM_REWARD:
                             reward_status = await self.claim(http_client=http_client)
                             logger.info(f"{self.session_name} | Claim reward: {reward_status}")
@@ -309,6 +306,9 @@ class Tapper:
                             logger.info(f"{self.session_name} | Auto task started")
                             await self.tasks(http_client=http_client)
                             logger.info(f"{self.session_name} | Auto task finished")
+
+                        if settings.AUTO_UPGRADE:
+                            reward_status = await self.upgrade(http_client=http_client)
 
                         logger.info(f"{self.session_name} | Sleep <y>{round(sleep_time / 60, 1)}</y> min")
                         await asyncio.sleep(delay=sleep_time)
