@@ -2,7 +2,7 @@
 title NotPixel
 if not exist venv (
     echo Creating virtual environment...
-    C:\Users\vadym\AppData\Local\Programs\Python\Python310\python.exe -m venv venv
+    python -m venv venv
 )
 
 echo Activating virtual environment...
