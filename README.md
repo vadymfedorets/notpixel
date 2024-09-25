@@ -27,9 +27,11 @@
 | **API_ID / API_HASH**   | Platform data from which to run the Telegram session (by default - android) |
 | **SLEEP_TIME**          |           Sleep time between cycles (by default - [7200, 10800])            |
 | **START_DELAY**         |            Delay between sessions at start (by default - [5, 25])           |
-| **AUTO_TASK**           |                         Auto tasks (default - True)                         |
-| **AUTO_UPGRADE**        |              Auto-join for tg channels tasks (default - True)               |
-| **CLAIM_REWARD**        |                             Claim daily reward                              |
+| **AUTO_DRAW**           |                    Auto-drawing pixels (default - True)                     |
+| **AUTO_UPGRADE**        |              Auto-upgrading your mining stuff (default - True)              |
+| **CLAIM_REWARD**        |                     Claim daily reward (default - True)                     |
+| **AUTO_TASK** DANGEROUS |                         Auto tasks (default - False)                        |
+| **TASKS_TO_DO**AUTOTASK |              List of tasks for auto-task (default - all tasks)              |
 | **REF_ID**              |                      Thing that goes after startapp=                        |
 | **USE_PROXY_FROM_FILE** |                   If you wanna use proxy (default False)                    |
 
