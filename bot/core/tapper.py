@@ -164,7 +164,7 @@ class Tapper:
             stats_json = await stats.json()
             done_task_list = stats_json['tasks'].keys()
             logger.debug(done_task_list)
-            for task in settings.TASK_TO_DO:
+            for task in settings.TASKS_TO_DO:
                 if task not in done_task_list:
                     tasks_status = await http_client.get(f'https://notpx.app/api/v1/mining/task/check/{task}')
                     tasks_status.raise_for_status()
@@ -176,7 +176,7 @@ class Tapper:
                         logger.info(f"{self.session_name} | Current balance: {current_balance}")
                     else:
                         logger.warning(f"{self.session_name} | Task requirements were not met {task}")
-                    await asyncio.sleep(delay=randint(3, 7))
+                    await asyncio.sleep(delay=randint(10, 20))
 
         except Exception as error:
             logger.error(f"{self.session_name} | Unknown error when processing tasks: {error}")
@@ -194,10 +194,13 @@ class Tapper:
 
             for _ in range(charges):
                 x, y = randint(30, 970), randint(30, 970)
+                if randint(0, 10) == 5:
+                    color = random.choice(colors)
+                    logger.info(f"{self.session_name} | Changing color to {color}")
                 paint_request = await http_client.post('https://notpx.app/api/v1/repaint/start',
                                                        json={"pixelId": int(f"{x}{y}")+1, "newColor": color})
                 paint_request.raise_for_status()
-                logger.info(f"{self.session_name} | Painted {x} {y} with color {color}")
+                logger.success(f"{self.session_name} | Painted {x} {y} with color {color}")
                 await asyncio.sleep(delay=randint(5, 10))
 
         except Exception as error:
@@ -268,7 +271,7 @@ class Tapper:
                 await self.check_proxy(http_client=http_client, proxy=proxy)
 
             delay = randint(settings.START_DELAY[0], settings.START_DELAY[1])
-            logger.info(f"{self.session_name} | Start delay {delay} seconds")
+            logger.info(f"{self.session_name} | Starting in {delay} seconds")
             await asyncio.sleep(delay=delay)
 
             token_live_time = randint(3500, 3600)
