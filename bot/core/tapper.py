@@ -204,7 +204,7 @@ class Tapper:
             stats_json = await stats.json()
             done_task_list = stats_json['tasks'].keys()
             logger.debug(done_task_list)
-            for task in settings.TASK_TO_DO:
+            for task in settings.TASKS_TO_DO:
                 if task not in done_task_list:
                     tasks_status = await http_client.get(f'https://notpx.app/api/v1/mining/task/check/{task}')
                     tasks_status.raise_for_status()
