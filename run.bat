@@ -1,5 +1,5 @@
 @echo off
-title CatsVsDogs
+title NotPixel
 if not exist venv (
     echo Creating virtual environment...
     python -m venv venv
