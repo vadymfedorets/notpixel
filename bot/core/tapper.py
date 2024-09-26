@@ -313,7 +313,7 @@ class Tapper:
             logger.info(f"{self.session_name} | Start delay {delay} seconds")
             await asyncio.sleep(delay=delay)
 
-            token_live_time = randint(3500, 3600)
+            token_live_time = randint(600, 800)
             while True:
                 try:
                     if time() - access_token_created_time >= token_live_time:
