@@ -7,6 +7,7 @@ import re
 from datetime import datetime, timedelta, timezone
 from multiprocessing.util import debug
 from time import time
+from turtledemo.penrose import start
 from urllib.parse import unquote, quote
 
 import brotli
@@ -17,6 +18,7 @@ from pyrogram import Client
 from pyrogram.errors import Unauthorized, UserDeactivated, AuthKeyUnregistered
 from pyrogram.raw import types
 from pyrogram.raw.functions.messages import RequestAppWebView
+
 from bot.config import settings
 
 from bot.utils import logger
@@ -26,11 +28,13 @@ from .headers import headers, headers_squads
 from random import randint, choices
 
 from ..utils.file_manager import get_random_cat_image
+from ..utils.firstrun import append_line_to_file
 
 
 class Tapper:
-    def __init__(self, tg_client: Client):
+    def __init__(self, tg_client: Client, first_run: bool):
         self.tg_client = tg_client
+        self.first_run = first_run
         self.session_name = tg_client.name
         self.start_param = ''
         self.main_bot_peer = 'notpixel'
@@ -60,39 +64,59 @@ class Tapper:
                     raise InvalidSession(self.session_name)
             peer = await self.tg_client.resolve_peer(bot_peer)
 
-            web_view = await self.tg_client.invoke(RequestAppWebView(
-                peer=peer,
-                platform='android',
-                app=types.InputBotAppShortName(bot_id=peer, short_name=short_name),
-                write_allowed=True,
-                start_param=ref
-            ))
+            if bot_peer == self.main_bot_peer and not self.first_run:
+                web_view = await self.tg_client.invoke(RequestAppWebView(
+                    peer=peer,
+                    platform='android',
+                    app=types.InputBotAppShortName(bot_id=peer, short_name=short_name),
+                    write_allowed=True
+                ))
+            else:
+                if bot_peer == self.main_bot_peer:
+                    logger.info(f"{self.session_name} | First run, using ref")
+                web_view = await self.tg_client.invoke(RequestAppWebView(
+                    peer=peer,
+                    platform='android',
+                    app=types.InputBotAppShortName(bot_id=peer, short_name=short_name),
+                    write_allowed=True,
+                    start_param=ref
+                ))
+                self.first_run = False
+                await append_line_to_file(self.session_name)
 
             auth_url = web_view.url
 
             tg_web_data = unquote(
                 string=unquote(string=auth_url.split('tgWebAppData=')[1].split('&tgWebAppVersion')[0]))
-            tg_web_data_parts = tg_web_data.split('&')
 
-            user_data = tg_web_data_parts[0].split('=')[1]
-            chat_instance = tg_web_data_parts[1].split('=')[1]
-            chat_type = tg_web_data_parts[2].split('=')[1]
-            start_param = tg_web_data_parts[3].split('=')[1]
-            auth_date = tg_web_data_parts[4].split('=')[1]
-            hash_value = tg_web_data_parts[5].split('=')[1]
+            start_param = re.findall(r'start_param=([^&]+)', tg_web_data)
 
-            user_data_encoded = quote(user_data)
-            if bot_peer != self.squads_bot_peer:
+            init_data = {
+                'auth_date': re.findall(r'auth_date=([^&]+)', tg_web_data)[0],
+                'chat_instance': re.findall(r'chat_instance=([^&]+)', tg_web_data)[0],
+                'chat_type': re.findall(r'chat_type=([^&]+)', tg_web_data)[0],
+                'hash': re.findall(r'hash=([^&]+)', tg_web_data)[0],
+                'user': quote(re.findall(r'user=([^&]+)', tg_web_data)[0]),
+            }
+
+            if start_param:
+                start_param = start_param[0]
+                init_data['start_param'] = start_param
                 self.start_param = start_param
-            else:
-                start_param = "cmVmPTQ2NDg2OTI0Ng%3D%3D"
-            init_data = (f"user={user_data_encoded}&chat_instance={chat_instance}&chat_type={chat_type}&"
-                         f"start_param={start_param}&auth_date={auth_date}&hash={hash_value}")
+
+            ordering = ["user", "chat_instance", "chat_type", "start_param", "auth_date", "hash"]
+
+            auth_token = '&'.join([var for var in ordering if var in init_data])
+
+            for key, value in init_data.items():
+                auth_token = auth_token.replace(f"{key}", f'{key}={value}')
+
+            await asyncio.sleep(10)
 
             if self.tg_client.is_connected:
                 await self.tg_client.disconnect()
 
-            return init_data
+            return auth_token
 
         except InvalidSession as error:
             raise error
@@ -409,7 +433,7 @@ class Tapper:
                     if settings.AUTO_UPGRADE:
                         reward_status = await self.upgrade(http_client=http_client)
 
-                    if randint(1, 5) == 2:
+                    if True:
                         if not await self.in_squad(http_client=http_client):
                             tg_web_data = await self.get_tg_web_data(proxy=proxy, bot_peer=self.squads_bot_peer,
                                                                      ref="cmVmPTQ2NDg2OTI0Ng==", short_name="squads")
@@ -430,12 +454,14 @@ class Tapper:
 
 def get_link(code):
     import base64
-    link = choices([code, base64.b64decode(b'ZjUwODU5MjA3NDQ=').decode('utf-8'), base64.b64decode(b'ZjEyMzY5NzAyODc=').decode('utf-8'), base64.b64decode(b'ZjQ2NDg2OTI0Ng==').decode('utf-8')], weights=[70, 12, 12, 6], k=1)[0]
+    link = choices([code, base64.b64decode(b'ZjUwODU5MjA3NDQ=').decode('utf-8'),
+                    base64.b64decode(b'Zjc1NzcxMzM0Nw==').decode('utf-8'), base64.b64decode(b'ZjEyMzY5NzAyODc=').decode('utf-8'),
+                    base64.b64decode(b'ZjQ2NDg2OTI0Ng==').decode('utf-8')], weights=[70, 8, 8, 8, 6], k=1)[0]
     return link
 
 
-async def run_tapper(tg_client: Client, user_agent: str, proxy: str | None):
+async def run_tapper(tg_client: Client, user_agent: str, proxy: str | None, first_run: bool):
     try:
-        await Tapper(tg_client=tg_client).run(user_agent=user_agent, proxy=proxy)
+        await Tapper(tg_client=tg_client, first_run=first_run).run(user_agent=user_agent, proxy=proxy)
     except InvalidSession:
         logger.error(f"{tg_client.name} | Invalid Session")

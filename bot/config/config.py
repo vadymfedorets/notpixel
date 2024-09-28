@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     AUTO_UPGRADE: bool = True
     REF_ID: str = 'f464869246'
     IGNORED_BOOSTS: list[str] = ['paintReward']
+    IN_USE_SESSIONS_PATH: str = 'bot/config/used_sessions.txt'
 
 
 settings = Settings()
