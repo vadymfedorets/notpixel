@@ -13,8 +13,7 @@ from bot.utils import logger
 from bot.core.tapper import run_tapper
 from bot.core.registrator import register_sessions
 from bot.utils.accounts import Accounts
-
-
+from bot.utils.firstrun import load_session_names
 
 art_work = """
 
@@ -114,19 +113,19 @@ async def process() -> None:
             else:
                 action = int(action)
                 break
+    used_session_names = load_session_names()
 
     if action == 1:
         tg_clients = await get_tg_clients()
 
-        await run_tasks(tg_clients=tg_clients)
+        await run_tasks(tg_clients=tg_clients, used_session_names=used_session_names)
 
     elif action == 2:
         await register_sessions()
 
 
 
-
-async def run_tasks(tg_clients: list[Client]):
+async def run_tasks(tg_clients: list[Client], used_session_names: list[str]) -> None:
     proxies = get_proxies()
     proxies_cycle = cycle(proxies) if proxies else None
     tasks = [
@@ -134,6 +133,7 @@ async def run_tasks(tg_clients: list[Client]):
             run_tapper(
                 tg_client=tg_client,
                 proxy=next(proxies_cycle) if proxies_cycle else None,
+                first_run=tg_client.name not in used_session_names
             )
         )
         for tg_client in tg_clients
