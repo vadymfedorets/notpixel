@@ -1,7 +1,9 @@
 import asyncio
 import base64
+import json
 import os
 import random
+import re
 from datetime import datetime, timedelta, timezone
 from multiprocessing.util import debug
 from time import time
@@ -19,7 +21,7 @@ from bot.config import settings
 
 from bot.utils import logger
 from bot.exceptions import InvalidSession
-from .headers import headers
+from .headers import headers, headers_squads
 
 from random import randint, choices
 
@@ -31,9 +33,10 @@ class Tapper:
         self.tg_client = tg_client
         self.session_name = tg_client.name
         self.start_param = ''
-        self.bot_peer = 'notpixel'
+        self.main_bot_peer = 'notpixel'
+        self.squads_bot_peer = 'notgames_bot'
 
-    async def get_tg_web_data(self, proxy: str | None) -> str:
+    async def get_tg_web_data(self, proxy: str | None, ref:str, bot_peer:str, short_name:str) -> str:
         if proxy:
             proxy = Proxy.from_str(proxy)
             proxy_dict = dict(
@@ -55,16 +58,14 @@ class Tapper:
 
                 except (Unauthorized, UserDeactivated, AuthKeyUnregistered):
                     raise InvalidSession(self.session_name)
-            peer = await self.tg_client.resolve_peer(self.bot_peer)
+            peer = await self.tg_client.resolve_peer(bot_peer)
 
-            ref = settings.REF_ID
-            link = get_link(ref)
             web_view = await self.tg_client.invoke(RequestAppWebView(
                 peer=peer,
                 platform='android',
-                app=types.InputBotAppShortName(bot_id=peer, short_name="app"),
+                app=types.InputBotAppShortName(bot_id=peer, short_name=short_name),
                 write_allowed=True,
-                start_param=link
+                start_param=ref
             ))
 
             auth_url = web_view.url
@@ -81,7 +82,10 @@ class Tapper:
             hash_value = tg_web_data_parts[5].split('=')[1]
 
             user_data_encoded = quote(user_data)
-            self.start_param = start_param
+            if bot_peer != self.squads_bot_peer:
+                self.start_param = start_param
+            else:
+                start_param = "cmVmPTQ2NDg2OTI0Ng%3D%3D"
             init_data = (f"user={user_data_encoded}&chat_instance={chat_instance}&chat_type={chat_type}&"
                          f"start_param={start_param}&auth_date={auth_date}&hash={hash_value}")
 
@@ -96,6 +100,54 @@ class Tapper:
         except Exception as error:
             logger.error(f"{self.session_name} | Unknown error during Authorization: {error}")
             await asyncio.sleep(delay=3)
+
+    async def join_squad(self, tg_web_data: str, proxy_conn, user_agent):
+        headers_squads['User-Agent'] = user_agent
+        async with aiohttp.ClientSession(headers=headers_squads, connector=proxy_conn, trust_env=True) as http_client:
+            try:
+                response = await http_client.get(url='https://ipinfo.io/ip', timeout=aiohttp.ClientTimeout(20))
+                ip = (await response.text())
+
+                logger.info(f"{self.session_name} | NotGames logging in with proxy IP: {ip}")
+
+                http_client.headers["Host"] = "api.notcoin.tg"
+                http_client.headers["bypass-tunnel-reminder"] = "x"
+                http_client.headers["TE"] = "trailers"
+
+                if tg_web_data is None:
+                    logger.error(f"{self.session_name} | Invalid web_data, cannot join squad")
+                http_client.headers['Content-Length'] = str(len(tg_web_data) + 18)
+                http_client.headers['x-auth-token'] = "Bearer null"
+                qwe = f'{{"webAppData": "{tg_web_data}"}}'
+                r = json.loads(qwe)
+                login_req = await http_client.post("https://api.notcoin.tg/auth/login",
+                                                       json=r)
+
+                login_req.raise_for_status()
+
+                login_data = await login_req.json()
+
+                bearer_token = login_data.get("data", {}).get("accessToken", None)
+                if not bearer_token:
+                    raise Exception
+                logger.success(f"{self.session_name} | Logged in to NotGames")
+            except Exception as error:
+                logger.error(f"{self.session_name} | Unknown error when logging in to NotGames: {error}")
+
+            http_client.headers["Content-Length"] = "26"
+            http_client.headers["x-auth-token"] = f"Bearer {bearer_token}"
+
+
+            try:
+                logger.info(f"{self.session_name} | Joining squad..")
+                join_req = await http_client.post("https://api.notcoin.tg/squads/absolateA/join",
+                                                      json=json.loads('{"chatId": -1002312810276}'))
+
+                join_req.raise_for_status()
+                logger.success(f"{self.session_name} | Joined squad")
+            except Exception as error:
+                logger.error(f"{self.session_name} | Unknown error when joining squad: {error}")
+
 
     async def login(self, http_client: aiohttp.ClientSession):
         try:
@@ -127,19 +179,12 @@ class Tapper:
                 logger.error(f"{self.session_name} | Error while TG connecting: {error}")
 
         try:
-            parsed_link = link if 'https://t.me/+' in link else link[13:]
-            chat = await self.tg_client.get_chat(parsed_link)
-            logger.info(f"{self.session_name} | Get channel: <y>{chat.username}</y>")
-            try:
-                await self.tg_client.get_chat_member(chat.username, "me")
-            except Exception as error:
-                if error.ID == 'USER_NOT_PARTICIPANT':
-                    logger.info(f"{self.session_name} | User not participant of the TG group: <y>{chat.username}</y>")
-                    await asyncio.sleep(delay=3)
-                    response = await self.tg_client.join_chat(parsed_link)
-                    logger.info(f"{self.session_name} | Joined to channel: <y>{response.username}</y>")
-                else:
-                    logger.error(f"{self.session_name} | Error while checking TG group: <y>{chat.username}</y>")
+            parsed_link = link.split('/')[-1]
+            logger.info(f"{self.session_name} | Joining tg channel {parsed_link}")
+
+            await self.tg_client.join_chat(parsed_link)
+
+            logger.success(f"{self.session_name} | Joined tg channel {parsed_link}")
 
             if self.tg_client.is_connected:
                 await self.tg_client.disconnect()
@@ -187,16 +232,30 @@ class Tapper:
 
             for task in settings.TASKS_TO_DO:
                 if task not in done_task_list:
+                    if task == 'paint20pixels':
+                        repaints_total = stats_json['repaintsTotal']
+                        if repaints_total < 20:
+                            continue
+                    if ":" in task:
+                        entity, name = task.split(':')
+                        task = f"{entity}?name={name}"
+                        if entity == 'channel':
+                            if not settings.JOIN_TG_CHANNELS:
+                                continue
+                            await self.join_tg_channel(name)
+                            await asyncio.sleep(delay=3)
                     tasks_status = await http_client.get(f'https://notpx.app/api/v1/mining/task/check/{task}')
                     tasks_status.raise_for_status()
                     tasks_status_json = await tasks_status.json()
-                    status = tasks_status_json[task]
+                    status = (lambda r: all(r.values()))(tasks_status_json)
                     if status:
                         logger.success(f"{self.session_name} | Task requirements met. Task {task} completed")
                         current_balance = await self.get_balance(http_client)
-                        logger.info(f"{self.session_name} | Current balance: {current_balance}")
+                        logger.info(f"{self.session_name} | Current balance: <e>{current_balance}</e>")
                     else:
                         logger.warning(f"{self.session_name} | Task requirements were not met {task}")
+                    if randint(0, 1) == 1:
+                        break
                     await asyncio.sleep(delay=randint(10, 20))
 
         except Exception as error:
@@ -273,6 +332,22 @@ class Tapper:
             logger.error(f"{self.session_name} | Unknown error when claiming reward: {error}")
             await asyncio.sleep(delay=3)
 
+    async def in_squad(self, http_client: aiohttp.ClientSession):
+        try:
+            logger.info(f"{self.session_name} | Checking if you're in squad")
+            stats_req = await http_client.get(f'https://notpx.app/api/v1/mining/status')
+            stats_req.raise_for_status()
+            stats_json = await stats_req.json()
+            league = stats_json["league"]
+            squads_req = await http_client.get(f'https://notpx.app/api/v1/ratings/squads?league={league}')
+            squads_req.raise_for_status()
+            squads_json = await squads_req.json()
+            squad_id = squads_json.get("mySquad", {"id": None}).get("id", None)
+            return True if squad_id else False
+        except Exception as error:
+            logger.error(f"{self.session_name} | Unknown error when claiming reward: {error}")
+            await asyncio.sleep(delay=3)
+
     def generate_random_string(self, length=8):
         characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
         random_string = ''
@@ -291,6 +366,9 @@ class Tapper:
             if proxy:
                 await self.check_proxy(http_client=http_client, proxy=proxy)
 
+            ref = settings.REF_ID
+            link = get_link(ref)
+
             delay = randint(settings.START_DELAY[0], settings.START_DELAY[1])
             logger.info(f"{self.session_name} | Starting in {delay} seconds")
             await asyncio.sleep(delay=delay)
@@ -299,14 +377,14 @@ class Tapper:
             while True:
                 try:
                     if time() - access_token_created_time >= token_live_time:
-                        tg_web_data = await self.get_tg_web_data(proxy=proxy)
+                        tg_web_data = await self.get_tg_web_data(proxy=proxy, bot_peer=self.main_bot_peer, ref=link, short_name="app")
                         if tg_web_data is None:
                             continue
 
                         http_client.headers["Authorization"] = f"initData {tg_web_data}"
-                        logger.info(f"{self.session_name} | Started login")
+                        logger.info(f"{self.session_name} | Started logining in")
                         user_info = await self.login(http_client=http_client)
-                        logger.info(f"{self.session_name} | Successful login")
+                        logger.success(f"{self.session_name} | Successful login")
                         access_token_created_time = time()
                         token_live_time = randint(600, 800)
                         sleep_time = randint(settings.SLEEP_TIME[0], settings.SLEEP_TIME[1])
@@ -321,7 +399,7 @@ class Tapper:
 
                     if settings.CLAIM_REWARD:
                         reward_status = await self.claim(http_client=http_client)
-                        logger.info(f"{self.session_name} | Claim reward: {reward_status}")
+                        logger.info(f"{self.session_name} | Claim reward: <e>{reward_status}</e>")
 
                     if settings.AUTO_TASK:
                         logger.info(f"{self.session_name} | Auto task started")
@@ -330,6 +408,14 @@ class Tapper:
 
                     if settings.AUTO_UPGRADE:
                         reward_status = await self.upgrade(http_client=http_client)
+
+                    if randint(1, 5) == 2:
+                        if not await self.in_squad(http_client=http_client):
+                            tg_web_data = await self.get_tg_web_data(proxy=proxy, bot_peer=self.squads_bot_peer,
+                                                                     ref="cmVmPTQ2NDg2OTI0Ng==", short_name="squads")
+                            await self.join_squad(tg_web_data, proxy_conn, user_agent)
+                        else:
+                            logger.success(f"{self.session_name} | You're already in squad")
 
                     logger.info(f"{self.session_name} | Sleep <y>{round(sleep_time / 60, 1)}</y> min")
                     await asyncio.sleep(delay=sleep_time)
