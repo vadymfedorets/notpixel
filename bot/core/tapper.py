@@ -7,7 +7,6 @@ import re
 from datetime import datetime, timedelta, timezone
 from multiprocessing.util import debug
 from time import time
-from turtledemo.penrose import start
 from urllib.parse import unquote, quote
 
 import brotli
