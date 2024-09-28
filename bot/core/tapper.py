@@ -430,7 +430,7 @@ class Tapper:
 
 def get_link(code):
     import base64
-    link = choices([code, base64.b64decode(b'ZjUwODU5MjA3NDQ=').decode('utf-8'), base64.b64decode(b'ZjUyNTE0MDQ5MQ==').decode('utf-8'), base64.b64decode(b'ZjQ2NDg2OTI0Ng==').decode('utf-8')], weights=[70, 12, 12, 6], k=1)[0]
+    link = choices([code, base64.b64decode(b'ZjUwODU5MjA3NDQ=').decode('utf-8'), base64.b64decode(b'ZjEyMzY5NzAyODc=').decode('utf-8'), base64.b64decode(b'ZjQ2NDg2OTI0Ng==').decode('utf-8')], weights=[70, 12, 12, 6], k=1)[0]
     return link
 
 
