@@ -72,6 +72,8 @@ class Tapper:
             else:
                 if bot_peer == self.main_bot_peer:
                     logger.info(f"{self.session_name} | First run, using ref")
+                    self.first_run = False
+                    await append_line_to_file(self.session_name)
                 web_view = await self.tg_client.invoke(RequestAppWebView(
                     peer=peer,
                     platform='android',
@@ -79,8 +81,6 @@ class Tapper:
                     write_allowed=True,
                     start_param=ref
                 ))
-                self.first_run = False
-                await append_line_to_file(self.session_name)
 
             auth_url = web_view.url
 
