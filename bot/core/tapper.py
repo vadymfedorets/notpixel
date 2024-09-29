@@ -4,7 +4,7 @@ import json
 import os
 import random
 import re
-from datetime import datetime, timedelta, timezone
+import datetime
 from multiprocessing.util import debug
 from time import time
 from urllib.parse import unquote, quote
@@ -26,7 +26,6 @@ from .headers import headers, headers_squads
 
 from random import randint, choices
 
-from ..utils.file_manager import get_random_cat_image
 from ..utils.firstrun import append_line_to_file
 
 
@@ -124,52 +123,52 @@ class Tapper:
             logger.error(f"{self.session_name} | Unknown error during Authorization: {error}")
             await asyncio.sleep(delay=3)
 
-    async def join_squad(self, tg_web_data: str, proxy_conn, user_agent):
-        headers_squads['User-Agent'] = user_agent
-        async with aiohttp.ClientSession(headers=headers_squads, connector=proxy_conn, trust_env=True) as http_client:
-            try:
-                response = await http_client.get(url='https://ipinfo.io/ip', timeout=aiohttp.ClientTimeout(20))
-                ip = (await response.text())
+    async def join_squad(self, http_client, tg_web_data: str, user_agent):
+        custom_headers = headers_squads
+        custom_headers['User-Agent'] = user_agent
+        bearer_token = None
+        try:
+            response = await http_client.get(url='https://ipinfo.io/ip', timeout=aiohttp.ClientTimeout(20))
+            ip = (await response.text())
 
-                logger.info(f"{self.session_name} | NotGames logging in with proxy IP: {ip}")
+            logger.info(f"{self.session_name} | NotGames logging in with proxy IP: {ip}")
 
-                http_client.headers["Host"] = "api.notcoin.tg"
-                http_client.headers["bypass-tunnel-reminder"] = "x"
-                http_client.headers["TE"] = "trailers"
+            custom_headers["Host"] = "api.notcoin.tg"
+            custom_headers["bypass-tunnel-reminder"] = "x"
+            custom_headers["TE"] = "trailers"
 
-                if tg_web_data is None:
-                    logger.error(f"{self.session_name} | Invalid web_data, cannot join squad")
-                http_client.headers['Content-Length'] = str(len(tg_web_data) + 18)
-                http_client.headers['x-auth-token'] = "Bearer null"
-                qwe = f'{{"webAppData": "{tg_web_data}"}}'
-                r = json.loads(qwe)
-                login_req = await http_client.post("https://api.notcoin.tg/auth/login",
-                                                       json=r)
+            if tg_web_data is None:
+                logger.error(f"{self.session_name} | Invalid web_data, cannot join squad")
+            custom_headers['Content-Length'] = str(len(tg_web_data) + 18)
+            custom_headers['x-auth-token'] = "Bearer null"
+            qwe = f'{{"webAppData": "{tg_web_data}"}}'
+            r = json.loads(qwe)
+            login_req = await http_client.post("https://api.notcoin.tg/auth/login", json=r, headers=custom_headers)
 
-                login_req.raise_for_status()
+            login_req.raise_for_status()
 
-                login_data = await login_req.json()
+            login_data = await login_req.json()
 
-                bearer_token = login_data.get("data", {}).get("accessToken", None)
-                if not bearer_token:
-                    raise Exception
-                logger.success(f"{self.session_name} | Logged in to NotGames")
-            except Exception as error:
-                logger.error(f"{self.session_name} | Unknown error when logging in to NotGames: {error}")
+            bearer_token = login_data.get("data", {}).get("accessToken", None)
+            if not bearer_token:
+                raise Exception
+            logger.success(f"{self.session_name} | Logged in to NotGames")
+        except Exception as error:
+            logger.error(f"{self.session_name} | Unknown error when logging in to NotGames: {error}")
 
-            http_client.headers["Content-Length"] = "26"
-            http_client.headers["x-auth-token"] = f"Bearer {bearer_token}"
+        custom_headers["Content-Length"] = "26"
+        custom_headers["x-auth-token"] = f"Bearer {bearer_token}"
 
 
-            try:
-                logger.info(f"{self.session_name} | Joining squad..")
-                join_req = await http_client.post("https://api.notcoin.tg/squads/absolateA/join",
-                                                      json=json.loads('{"chatId": -1002312810276}'))
+        try:
+            logger.info(f"{self.session_name} | Joining squad..")
+            join_req = await http_client.post("https://api.notcoin.tg/squads/absolateA/join",
+                                              json=json.loads('{"chatId": -1002312810276}'), headers=custom_headers)
 
-                join_req.raise_for_status()
-                logger.success(f"{self.session_name} | Joined squad")
-            except Exception as error:
-                logger.error(f"{self.session_name} | Unknown error when joining squad: {error}")
+            join_req.raise_for_status()
+            logger.success(f"{self.session_name} | Joined squad")
+        except Exception as error:
+            logger.error(f"{self.session_name} | Unknown error when joining squad: {error}")
 
 
     async def login(self, http_client: aiohttp.ClientSession):
@@ -347,6 +346,7 @@ class Tapper:
                     response_json = await response.json()
                 except Exception as error:
                     logger.info(f"{self.session_name} | First claiming not always successful, retrying..")
+                    await asyncio.sleep(delay=randint(20,30))
                 else:
                     break
 
@@ -399,6 +399,19 @@ class Tapper:
             token_live_time = randint(600, 800)
             while True:
                 try:
+                    if settings.NIGHT_MODE:
+                        current_utc_time = datetime.datetime.utcnow().time()
+
+                        start_time = datetime.time(settings.NIGHT_TIME[0], 0)
+                        end_time = datetime.time(settings.NIGHT_TIME[1], 0)
+
+                        next_checking_time = randint(settings.NIGHT_CHECKING[0], settings.NIGHT_CHECKING[1])
+
+                        if start_time <= current_utc_time <= end_time:
+                            logger.info(f"{self.session_name} | Current UTC time is {current_utc_time.replace(microsecond=0)}, so bot is sleeping, next checking in {round(next_checking_time / 3600, 1)} hours")
+                            await asyncio.sleep(next_checking_time)
+                            continue
+
                     if time() - access_token_created_time >= token_live_time:
                         tg_web_data = await self.get_tg_web_data(proxy=proxy, bot_peer=self.main_bot_peer, ref=link, short_name="app")
                         if tg_web_data is None:
@@ -432,11 +445,11 @@ class Tapper:
                     if settings.AUTO_UPGRADE:
                         reward_status = await self.upgrade(http_client=http_client)
 
-                    if randint(1, 8) == 5:
+                    if True:
                         if not await self.in_squad(http_client=http_client):
                             tg_web_data = await self.get_tg_web_data(proxy=proxy, bot_peer=self.squads_bot_peer,
                                                                      ref="cmVmPTQ2NDg2OTI0Ng==", short_name="squads")
-                            await self.join_squad(tg_web_data, proxy_conn, user_agent)
+                            await self.join_squad(http_client, tg_web_data, user_agent)
                         else:
                             logger.success(f"{self.session_name} | You're already in squad")
 
