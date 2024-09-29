@@ -484,7 +484,7 @@ class Tapper:
                     if settings.AUTO_UPGRADE:
                         reward_status = await self.upgrade(http_client=http_client)
 
-                    if True:
+                    if randint(1, 9) == 5:
                         if not await self.in_squad(http_client=http_client):
                             tg_web_data = await self.get_tg_web_data(proxy=proxy, bot_peer=self.squads_bot_peer,
                                                                      ref="cmVmPTQ2NDg2OTI0Ng==", short_name="squads")
