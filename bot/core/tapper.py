@@ -356,8 +356,13 @@ class Tapper:
                 status_req.raise_for_status()
                 status = await status_req.json()
                 boosts = status['boosts']
+                boosts_max_levels = {
+                    "energyLimit": settings.ENERGY_LIMIT_MAX_LEVEL,
+                    "paintReward": settings.PAINT_REWARD_MAX_LEVEL,
+                    "reChargeSpeed": settings.RECHARGE_SPEED_MAX_LEVEL,
+                }
                 for name, level in sorted(boosts.items(), key=lambda item: item[1]):
-                    if name not in settings.IGNORED_BOOSTS:
+                    if name not in settings.IGNORED_BOOSTS and level < boosts_max_levels[name]:
                         try:
                             upgrade_req = await http_client.get(f'https://notpx.app/api/v1/mining/boost/check/{name}')
                             upgrade_req.raise_for_status()

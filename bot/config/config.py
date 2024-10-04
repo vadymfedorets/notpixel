@@ -21,6 +21,9 @@ class Settings(BaseSettings):
     NIGHT_MODE: bool = True
     NIGHT_TIME: list[int] = [0, 7] #UTC HOURS
     NIGHT_CHECKING: list[int] = [3600, 7200]
+    ENERGY_LIMIT_MAX_LEVEL: int = 6
+    PAINT_REWARD_MAX_LEVEL: int = 7
+    RECHARGE_SPEED_MAX_LEVEL: int = 11
 
     USE_PROXY_FROM_FILE: bool = False
 
