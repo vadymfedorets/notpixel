@@ -1,0 +1,108 @@
+{
+  "data": [
+    {
+      "coordinates": [
+        {
+          "topRight": [472, 473],
+          "bottomLeft": [529, 510]
+        },
+        {
+          "topRight": [602, 375],
+          "bottomLeft": [625, 621]
+        },
+        {
+          "topRight": [373, 377],
+          "bottomLeft": [398, 629]
+        },
+        {
+          "topRight": [400, 602],
+          "bottomLeft": [545, 625]
+        },
+        {
+          "topRight": [423, 376],
+          "bottomLeft": [613, 397]
+        },
+        {
+          "topRight": [758, 384],
+          "bottomLeft": [951, 393]
+        },
+        {
+          "topRight": [842, 464],
+          "bottomLeft": [882, 463]
+        },
+        {
+          "topRight": [911, 439],
+          "bottomLeft": [926, 576]
+        },
+        {
+          "topRight": [745, 592],
+          "bottomLeft": [824, 624]
+        },
+        {
+          "topRight": [827, 592],
+          "bottomLeft": [994, 623]
+        }
+      ],
+      "color": "#000000"
+    },
+    {
+      "coordinates": [
+        {
+          "topRight": [408, 405],
+          "bottomLeft": [459, 459]
+        },
+        {
+          "topRight": [405, 538],
+          "bottomLeft": [434, 594]
+        },
+        {
+          "topRight": [528, 406],
+          "bottomLeft": [596, 462]
+        }
+      ],
+      "color": "#7EED56"
+    },
+    {
+      "coordinates": [
+        {
+          "topRight": [536, 476],
+          "bottomLeft": [592, 587]
+        },
+        {
+          "topRight": [487, 405],
+          "bottomLeft": [522, 464]
+        },
+        {
+          "topRight": [407, 474],
+          "bottomLeft": [460, 524]
+        }
+      ],
+      "color": "#3690EA"
+    },
+    {
+      "coordinates": [
+        {
+          "topRight": [213, 458],
+          "bottomLeft": [254, 505]
+        },
+        {
+          "topRight": [118, 376],
+          "bottomLeft": [253, 408]
+        },
+        {
+          "topRight": [200, 555],
+          "bottomLeft": [252, 573]
+        },
+        {
+          "topRight": [5, 375],
+          "bottomLeft": [44, 413]
+        },
+        {
+          "topRight": [4, 431],
+          "bottomLeft": [48, 477]
+        }
+      ],
+      "color": "#51E9F4"
+    }
+  ]
+}

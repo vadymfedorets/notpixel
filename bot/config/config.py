@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     ENERGY_LIMIT_MAX_LEVEL: int = 6
     PAINT_REWARD_MAX_LEVEL: int = 7
     RECHARGE_SPEED_MAX_LEVEL: int = 11
+    POINTS_3X: bool = False
 
 
 settings = Settings()
