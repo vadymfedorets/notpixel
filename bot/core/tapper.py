@@ -323,6 +323,12 @@ class Tapper:
         except Exception as error:
             logger.error(f"{self.session_name} | Unknown error when processing tasks: {error}")
 
+    async def make_paint_request(self, http_client: aiohttp.ClientSession, x, y, color, delay_start, delay_end):
+        paint_request = await http_client.post('https://notpx.app/api/v1/repaint/start',
+                                        json={"pixelId": int(f"{x}{y}")+1, "newColor": color})
+        paint_request.raise_for_status()
+        logger.success(f"{self.session_name} | Painted {x} {y} with random color: {color}")
+        await asyncio.sleep(delay=randint(delay_start, delay_end))
 
     async def paint(self, http_client: aiohttp.ClientSession):
         try:
@@ -332,21 +338,38 @@ class Tapper:
             charges = stats_json['charges']
             colors = ("#9C6926", "#00CCC0", "#bf4300",
                       "#FFFFFF", "#000000", "#6D001A")
+            
             color = random.choice(colors)
 
-            for _ in range(charges):
-                x, y = randint(30, 970), randint(30, 970)
-                if randint(0, 10) == 5:
-                    color = random.choice(colors)
-                    logger.info(f"{self.session_name} | Changing color to {color}")
-                paint_request = await http_client.post('https://notpx.app/api/v1/repaint/start',
-                                                       json={"pixelId": int(f"{x}{y}")+1, "newColor": color})
-                paint_request.raise_for_status()
-                logger.success(f"{self.session_name} | Painted {x} {y} with color {color}")
-                await asyncio.sleep(delay=randint(5, 10))
+            if settings.POINTS_3X:
+                with open('bot/points3x/data.json', 'r') as file:
+                    squares = json.load(file)
+
+                field = squares["data"][random.randint(0, len(squares) - 1)]
+                coords = field["coordinates"]
+                rect_coords = coords[random.randint(0, len(coords) - 1)]
+                color3x = field["color"]
+
+                for _ in range(charges//2):
+                    x = randint(rect_coords["topRight"][0], rect_coords["bottomLeft"][0])
+                    y = randint(rect_coords["topRight"][1], rect_coords["bottomLeft"][1])
+                    if randint(0, 10) == 5:
+                        color = random.choice(colors)
+                        logger.info(f"{self.session_name} | Changing color to {color}")
+                    await self.make_paint_request(http_client, x, y, color, 2, 5)
+
+                    await self.make_paint_request(http_client, x, y, color3x, 5, 10)
+            else:
+                for _ in range(charges):
+                    x, y = randint(30, 970), randint(30, 970)
+                    if randint(0, 10) == 5:
+                        color = random.choice(colors)
+                        logger.info(f"{self.session_name} | Changing color to {color}")
+                        
+                    await self.make_paint_request(http_client, x, y, color, 5, 10)
 
         except Exception as error:
-            logger.error(f"{self.session_name} | Unknown error when processing tasks: {error}")
+            logger.error(f"{self.session_name} | Unknown error when painting: {error}")
             await asyncio.sleep(delay=3)
 
     async def upgrade(self, http_client: aiohttp.ClientSession):
@@ -356,13 +379,8 @@ class Tapper:
                 status_req.raise_for_status()
                 status = await status_req.json()
                 boosts = status['boosts']
-                boosts_max_levels = {
-                    "energyLimit": settings.ENERGY_LIMIT_MAX_LEVEL,
-                    "paintReward": settings.PAINT_REWARD_MAX_LEVEL,
-                    "reChargeSpeed": settings.RECHARGE_SPEED_MAX_LEVEL,
-                }
                 for name, level in sorted(boosts.items(), key=lambda item: item[1]):
-                    if name not in settings.IGNORED_BOOSTS and level < boosts_max_levels[name]:
+                    if name not in settings.IGNORED_BOOSTS:
                         try:
                             upgrade_req = await http_client.get(f'https://notpx.app/api/v1/mining/boost/check/{name}')
                             upgrade_req.raise_for_status()
