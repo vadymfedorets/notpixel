@@ -354,7 +354,7 @@ class Tapper:
                     except Exception as error:
                         logger.warning(f"{self.session_name} | Not enough money to keep upgrading.")
                         await asyncio.sleep(delay=randint(5, 10))
-
+                        return
         except Exception as error:
             logger.error(f"{self.session_name} | Unknown error when upgrading: {error}")
             await asyncio.sleep(delay=3)
