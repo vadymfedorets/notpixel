@@ -334,27 +334,26 @@ class Tapper:
 
     async def upgrade(self, http_client: aiohttp.ClientSession):
         try:
-            while True:
-                status_req = await http_client.get('https://notpx.app/api/v1/mining/status')
-                status_req.raise_for_status()
-                status = await status_req.json()
-                boosts = status['boosts']
-                boosts_max_levels = {
-                    "energyLimit": settings.ENERGY_LIMIT_MAX_LEVEL,
-                    "paintReward": settings.PAINT_REWARD_MAX_LEVEL,
-                    "reChargeSpeed": settings.RECHARGE_SPEED_MAX_LEVEL,
-                }
-                for name, level in sorted(boosts.items(), key=lambda item: item[1]):
-                    if name not in settings.IGNORED_BOOSTS and level < boosts_max_levels[name]:
-                        try:
-                            upgrade_req = await http_client.get(f'https://notpx.app/api/v1/mining/boost/check/{name}')
-                            upgrade_req.raise_for_status()
-                            logger.success(f"{self.session_name} | Upgraded boost: {name}")
-                            await asyncio.sleep(delay=randint(2, 5))
-                        except Exception as error:
-                            logger.warning(f"{self.session_name} | Not enough money to keep upgrading.")
-                            await asyncio.sleep(delay=randint(5, 10))
-                            return
+            status_req = await http_client.get('https://notpx.app/api/v1/mining/status')
+            status_req.raise_for_status()
+            status = await status_req.json()
+            boosts = status['boosts']
+            boosts_max_levels = {
+                "energyLimit": settings.ENERGY_LIMIT_MAX_LEVEL,
+                "paintReward": settings.PAINT_REWARD_MAX_LEVEL,
+                "reChargeSpeed": settings.RECHARGE_SPEED_MAX_LEVEL,
+            }
+            for name, level in sorted(boosts.items(), key=lambda item: item[1]):
+                while name not in settings.IGNORED_BOOSTS and level < boosts_max_levels[name]:
+                    try:
+                        upgrade_req = await http_client.get(f'https://notpx.app/api/v1/mining/boost/check/{name}')
+                        upgrade_req.raise_for_status()
+                        logger.success(f"{self.session_name} | Upgraded boost: {name}")
+                        level += 1
+                        await asyncio.sleep(delay=randint(2, 5))
+                    except Exception as error:
+                        logger.warning(f"{self.session_name} | Not enough money to keep upgrading.")
+                        await asyncio.sleep(delay=randint(5, 10))
 
         except Exception as error:
             logger.error(f"{self.session_name} | Unknown error when upgrading: {error}")
