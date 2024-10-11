@@ -3,78 +3,24 @@
     {
       "coordinates": [
         {
-          "topRight": [472, 473],
-          "bottomLeft": [529, 510]
+          "topRight": [241, 449],
+          "bottomLeft": [297, 513]
         },
         {
-          "topRight": [602, 375],
-          "bottomLeft": [625, 621]
+          "topRight": [243, 548],
+          "bottomLeft": [311, 593]
         },
         {
-          "topRight": [373, 377],
-          "bottomLeft": [398, 629]
+          "topRight": [348, 420],
+          "bottomLeft": [444, 473]
         },
         {
-          "topRight": [400, 602],
-          "bottomLeft": [545, 625]
+          "topRight": [537, 302],
+          "bottomLeft": [595, 369]
         },
         {
-          "topRight": [423, 376],
-          "bottomLeft": [613, 397]
-        },
-        {
-          "topRight": [758, 384],
-          "bottomLeft": [951, 393]
-        },
-        {
-          "topRight": [842, 463],
-          "bottomLeft": [882, 464]
-        },
-        {
-          "topRight": [911, 439],
-          "bottomLeft": [926, 576]
-        },
-        {
-          "topRight": [745, 592],
-          "bottomLeft": [824, 624]
-        },
-        {
-          "topRight": [827, 592],
-          "bottomLeft": [994, 623]
-        }
-      ],
-      "color": "#000000"
-    },
-    {
-      "coordinates": [
-        {
-          "topRight": [408, 405],
-          "bottomLeft": [459, 459]
-        },
-        {
-          "topRight": [405, 538],
-          "bottomLeft": [434, 594]
-        },
-        {
-          "topRight": [528, 406],
-          "bottomLeft": [596, 462]
-        }
-      ],
-      "color": "#7EED56"
-    },
-    {
-      "coordinates": [
-        {
-          "topRight": [536, 476],
-          "bottomLeft": [592, 587]
-        },
-        {
-          "topRight": [487, 405],
-          "bottomLeft": [522, 464]
-        },
-        {
-          "topRight": [407, 474],
-          "bottomLeft": [460, 524]
+          "topRight": [692, 252],
+          "bottomLeft": [753, 283]
         }
       ],
       "color": "#3690EA"
@@ -82,27 +28,105 @@
     {
       "coordinates": [
         {
-          "topRight": [213, 458],
-          "bottomLeft": [254, 505]
+          "topRight": [399, 264],
+          "bottomLeft": [424, 267]
         },
         {
-          "topRight": [118, 376],
-          "bottomLeft": [253, 408]
+          "topRight": [416, 258],
+          "bottomLeft": [427, 286]
         },
         {
-          "topRight": [200, 555],
-          "bottomLeft": [252, 573]
+          "topRight": [394, 287],
+          "bottomLeft": [426, 286]
         },
         {
-          "topRight": [5, 375],
-          "bottomLeft": [44, 413]
+          "topRight": [416, 289],
+          "bottomLeft": [463, 306]
         },
         {
-          "topRight": [4, 431],
-          "bottomLeft": [48, 477]
+          "topRight": [305, 312],
+          "bottomLeft": [338, 331]
+        },
+        {
+          "topRight": [249, 376],
+          "bottomLeft": [311, 383]
+        },
+        {
+          "topRight": [416, 294],
+          "bottomLeft": [468, 303]
+        },
+        {
+          "topRight": [506, 260],
+          "bottomLeft": [540, 266]
         }
       ],
-      "color": "#51E9F4"
+      "color": "#7EED56"
+    },
+    {
+      "coordinates": [
+        {
+          "topRight": [679, 450],
+          "bottomLeft": [471, 507]
+        },
+        {
+          "topRight": [669, 494],
+          "bottomLeft": [690, 545]
+        }
+      ],
+      "color": "#9C6926"
+    },
+    {
+      "coordinates": [
+        {
+          "topRight": [615, 291],
+          "bottomLeft": [659, 307]
+        },
+        {
+          "topRight": [627, 279],
+          "bottomLeft": [673, 287]
+        },
+        {
+          "topRight": [544, 512],
+          "bottomLeft": [601, 539]
+        },
+        {
+          "topRight": [363, 666],
+          "bottomLeft": [385, 691]
+        },
+        {
+          "topRight": [439, 712],
+          "bottomLeft": [469, 727]
+        },
+        {
+          "topRight": [515, 679],
+          "bottomLeft": [542, 694]
+        },
+        {
+          "topRight": [386, 654],
+          "bottomLeft": [410, 665]
+        },
+        {
+          "topRight": [327, 617],
+          "bottomLeft": [341, 626]
+        },
+        {
+          "topRight": [245, 668],
+          "bottomLeft": [267, 681]
+        },
+        {
+          "topRight": [311, 481],
+          "bottomLeft": [321, 489]
+        },
+        {
+          "topRight": [370, 350],
+          "bottomLeft": [377, 360]
+        },
+        {
+          "topRight": [383, 306],
+          "bottomLeft": [390, 314]
+        }
+      ],
+      "color": "#FFFFFF"
     }
   ]
 }
