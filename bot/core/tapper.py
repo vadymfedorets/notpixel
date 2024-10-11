@@ -517,6 +517,9 @@ class Tapper:
                     if randint(1, 3) == 2:
                         if not await self.has_template(http_client=http_client):
                             self.joined = False
+                            await asyncio.sleep(delay=5)
+                            token_live_time = 0
+                            continue
 
                     if settings.AUTO_DRAW:
                         await self.paint(http_client=http_client)
