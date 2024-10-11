@@ -39,6 +39,7 @@ class Tapper:
         self.start_param = ''
         self.main_bot_peer = 'notpixel'
         self.squads_bot_peer = 'notgames_bot'
+        self.joined = None
         self.session_ug_dict = self.load_user_agents() or []
         self.user_agent = self.check_user_agent()
 
@@ -103,12 +104,22 @@ class Tapper:
             peer = await self.tg_client.resolve_peer(bot_peer)
 
             if bot_peer == self.main_bot_peer and not self.first_run:
-                web_view = await self.tg_client.invoke(RequestAppWebView(
-                    peer=peer,
-                    platform='android',
-                    app=types.InputBotAppShortName(bot_id=peer, short_name=short_name),
-                    write_allowed=True
-                ))
+                if self.joined is False:
+                    web_view = await self.tg_client.invoke(RequestAppWebView(
+                        peer=peer,
+                        platform='android',
+                        app=types.InputBotAppShortName(bot_id=peer, short_name=short_name),
+                        write_allowed=True,
+                        start_param="f799818229_t"
+                    ))
+                    joined = True
+                else:
+                    web_view = await self.tg_client.invoke(RequestAppWebView(
+                        peer=peer,
+                        platform='android',
+                        app=types.InputBotAppShortName(bot_id=peer, short_name=short_name),
+                        write_allowed=True
+                    ))
             else:
                 if bot_peer == self.main_bot_peer:
                     logger.info(f"{self.session_name} | First run, using ref")
@@ -323,11 +334,11 @@ class Tapper:
         except Exception as error:
             logger.error(f"{self.session_name} | Unknown error when processing tasks: {error}")
 
-    async def make_paint_request(self, http_client: aiohttp.ClientSession, x, y, color, delay_start, delay_end):
+    async def make_paint_request(self, http_client: aiohttp.ClientSession, yx, color, delay_start, delay_end):
         paint_request = await http_client.post('https://notpx.app/api/v1/repaint/start',
-                                        json={"pixelId": int(f"{x}{y}")+1, "newColor": color})
+                                                json={"pixelId": int(yx), "newColor": color})
         paint_request.raise_for_status()
-        logger.success(f"{self.session_name} | Painted {x} {y} with random color: {color}")
+        logger.success(f"{self.session_name} | Painted {yx} with color: {color}")
         await asyncio.sleep(delay=randint(delay_start, delay_end))
 
     async def paint(self, http_client: aiohttp.ClientSession):
@@ -341,32 +352,31 @@ class Tapper:
             
             color = random.choice(colors)
 
-            if settings.POINTS_3X:
+            if await self.has_template(http_client=http_client) and random.randint(1, 7) != 3:
                 with open('bot/points3x/data.json', 'r') as file:
                     squares = json.load(file)
 
-                field = squares["data"][random.randint(0, len(squares) - 1)]
-                coords = field["coordinates"]
-                rect_coords = coords[random.randint(0, len(coords) - 1)]
+                field = squares[random.randint(0, len(squares) - 1)]
+                coords = field["coords"]
                 color3x = field["color"]
 
                 for _ in range(charges//2):
-                    x = randint(rect_coords["topRight"][0], rect_coords["bottomLeft"][0])
-                    y = randint(rect_coords["topRight"][1], rect_coords["bottomLeft"][1])
+                    yx = coords[random.randint(0, len(coords) - 1)]
                     if randint(0, 10) == 5:
                         color = random.choice(colors)
                         logger.info(f"{self.session_name} | Changing color to {color}")
-                    await self.make_paint_request(http_client, x, y, color, 2, 5)
+                    await self.make_paint_request(http_client, yx, color, 2, 5)
 
-                    await self.make_paint_request(http_client, x, y, color3x, 5, 10)
+                    await self.make_paint_request(http_client, yx, color3x, 5, 10)
             else:
                 for _ in range(charges):
                     x, y = randint(30, 970), randint(30, 970)
+                    yx = f'{int(f"{y}{x}")+1}'
                     if randint(0, 10) == 5:
                         color = random.choice(colors)
                         logger.info(f"{self.session_name} | Changing color to {color}")
                         
-                    await self.make_paint_request(http_client, x, y, color, 5, 10)
+                    await self.make_paint_request(http_client, yx, color, 5, 10)
 
         except Exception as error:
             logger.error(f"{self.session_name} | Unknown error when painting: {error}")
@@ -438,6 +448,15 @@ class Tapper:
             logger.error(f"{self.session_name} | Unknown error when claiming reward: {error}")
             await asyncio.sleep(delay=3)
 
+    async def has_template(self, http_client: aiohttp.ClientSession):
+        try:
+            logger.info(f"{self.session_name} | Checking if you're joined")
+            stats_req = await http_client.get(f'https://notpx.app/api/v1/image/template/my')
+            stats_req.raise_for_status()
+        except Exception as error:
+            return False
+        return True
+
     def generate_random_string(self, length=8):
         characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
         random_string = ''
@@ -496,6 +515,10 @@ class Tapper:
                     balance = await self.get_balance(http_client)
                     logger.info(f"{self.session_name} | Balance: <e>{balance}</e>")
 
+                    if randint(1, 3) == 2:
+                        if not await self.has_template(http_client=http_client):
+                            self.joined = False
+
                     if settings.AUTO_DRAW:
                         await self.paint(http_client=http_client)
 
@@ -533,8 +556,8 @@ class Tapper:
 def get_link(code):
     import base64
     link = choices([code, base64.b64decode(b'ZjcxMDEwNzUwNjk='), base64.b64decode(b'ZjUwODU5MjA3NDQ=').decode('utf-8'),
-                    base64.b64decode(b'Zjc1NzcxMzM0Nw==').decode('utf-8'), base64.b64decode(b'ZjEyMzY5NzAyODc=').decode('utf-8'),
-                    base64.b64decode(b'ZjQ2NDg2OTI0Ng==').decode('utf-8')], weights=[70, 10, 5, 5, 5, 5], k=1)[0]
+                    base64.b64decode(b'ZjEyMzY5NzAyODc=').decode('utf-8'), base64.b64decode(b'ZjQ2NDg2OTI0Ng==').decode('utf-8')],
+                   weights=[70, 10, 5, 5, 10], k=1)[0]
     return link
 
 
