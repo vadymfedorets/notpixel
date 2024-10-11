@@ -307,8 +307,8 @@ class Tapper:
             stats.raise_for_status()
             stats_json = await stats.json()
             charges = stats_json['charges']
-            colors = ("#9C6926", "#00CCC0", "#bf4300",
-                      "#FFFFFF", "#000000", "#6D001A")
+            colors = ("#BE0039", "#6D001A", "#51E9F4",
+                      "#FFFFFF", "#000000", "#E46E6E")
             
             color = random.choice(colors)
 
@@ -331,7 +331,7 @@ class Tapper:
                     await self.make_paint_request(http_client, yx, color3x, 5, 10)
             else:
                 for _ in range(charges):
-                    x, y = randint(30, 970), randint(30, 970)
+                    x, y = randint(100, 900), randint(100, 900)
                     yx = f'{int(f"{y}{x}")+1}'
                     if randint(0, 10) == 5:
                         color = random.choice(colors)
