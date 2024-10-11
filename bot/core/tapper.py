@@ -450,7 +450,6 @@ class Tapper:
 
     async def has_template(self, http_client: aiohttp.ClientSession):
         try:
-            logger.info(f"{self.session_name} | Checking if you're joined")
             stats_req = await http_client.get(f'https://notpx.app/api/v1/image/template/my')
             stats_req.raise_for_status()
         except Exception as error:
