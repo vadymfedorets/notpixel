@@ -312,20 +312,19 @@ class Tapper:
             
             color = random.choice(colors)
 
-            if await self.has_template(http_client=http_client) and random.randint(1, 7) != 3:
-                with open('bot/points3x/data.json', 'r') as file:
+            if await self.has_template(http_client=http_client):
+                with open('bot/points3x/template_data.json', 'r') as file:
                     squares = json.load(file)
 
                 field = squares[random.randint(0, len(squares) - 1)]
                 coords = field["coords"]
                 color3x = field["color"]
 
-                for _ in range(charges//2):
+                for _ in range(charges):
                     yx = coords[random.randint(0, len(coords) - 1)]
                     if randint(0, 10) == 5:
                         color = random.choice(colors)
                         logger.info(f"{self.session_name} | Changing color to {color}")
-                    await self.make_paint_request(http_client, yx, color, 2, 5)
 
                     await self.make_paint_request(http_client, yx, color3x, 5, 10)
             else:
