@@ -489,6 +489,14 @@ class Tapper:
                         reward_status = await self.claim(http_client=http_client)
                         logger.info(f"{self.session_name} | Claim reward: <e>{reward_status}</e>")
 
+                    if True:
+                        if not await self.in_squad(http_client=http_client):
+                            tg_web_data = await self.get_tg_web_data(proxy=proxy, bot_peer=self.squads_bot_peer,
+                                                                     ref="cmVmPTQ2NDg2OTI0Ng==", short_name="squads")
+                            await self.join_squad(http_client, tg_web_data, user_agent)
+                        else:
+                            logger.success(f"{self.session_name} | You're already in squad")
+
                     if settings.AUTO_TASK:
                         logger.info(f"{self.session_name} | Auto task started")
                         await self.tasks(http_client=http_client)
@@ -496,14 +504,6 @@ class Tapper:
 
                     if settings.AUTO_UPGRADE:
                         reward_status = await self.upgrade(http_client=http_client)
-
-                    if randint(1, 9) == 5:
-                        if not await self.in_squad(http_client=http_client):
-                            tg_web_data = await self.get_tg_web_data(proxy=proxy, bot_peer=self.squads_bot_peer,
-                                                                     ref="cmVmPTQ2NDg2OTI0Ng==", short_name="squads")
-                            await self.join_squad(http_client, tg_web_data, user_agent)
-                        else:
-                            logger.success(f"{self.session_name} | You're already in squad")
 
                     logger.info(f"{self.session_name} | Sleep <y>{round(sleep_time / 60, 1)}</y> min")
                     await asyncio.sleep(delay=sleep_time)
