@@ -325,7 +325,6 @@ class Tapper:
                     if randint(0, 10) == 5:
                         color = random.choice(colors)
                         logger.info(f"{self.session_name} | Changing color to {color}")
-                    logger.debug(f"{self.session_name} | {yx} - {color3x}")
                     await self.make_paint_request(http_client, yx, color, 2, 5)
 
                     await self.make_paint_request(http_client, yx, color3x, 5, 10)
