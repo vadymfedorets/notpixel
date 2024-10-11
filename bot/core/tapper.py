@@ -365,6 +365,7 @@ class Tapper:
                     if randint(0, 10) == 5:
                         color = random.choice(colors)
                         logger.info(f"{self.session_name} | Changing color to {color}")
+                    logger.debug(f"{self.session_name} | {yx} - {color3x}")
                     await self.make_paint_request(http_client, yx, color, 2, 5)
 
                     await self.make_paint_request(http_client, yx, color3x, 5, 10)
@@ -517,7 +518,9 @@ class Tapper:
                     if randint(1, 3) == 2:
                         if not await self.has_template(http_client=http_client):
                             self.joined = False
-                            await asyncio.sleep(delay=5)
+                            delay = randint(60, 120)
+                            logger.info(f"{self.session_name} | Joining to template restart in {delay} seconds.")
+                            await asyncio.sleep(delay=delay)
                             token_live_time = 0
                             continue
 
