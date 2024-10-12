@@ -400,8 +400,9 @@ class Tapper:
             squad_id = squads_json.get("mySquad", {"id": None}).get("id", None)
             return True if squad_id else False
         except Exception as error:
-            logger.error(f"{self.session_name} | Unknown error when claiming reward: {error}")
+            logger.error(f"{self.session_name} | Unknown error when checking squad reward: {error}")
             await asyncio.sleep(delay=3)
+            return True
 
     async def has_template(self, http_client: aiohttp.ClientSession):
         try:
