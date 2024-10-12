@@ -309,7 +309,7 @@ class Tapper:
         logger.success(f"{self.session_name} | Painted {yx} with color: {color} | got <e>+{change}</e>")
         await asyncio.sleep(delay=randint(delay_start, delay_end))
 
-    async def paint(self, http_client: aiohttp.ClientSession):
+    async def paint(self, http_client: aiohttp.ClientSession, retries=20):
         try:
             stats = await http_client.get('https://notpx.app/api/v1/mining/status')
             stats.raise_for_status()
@@ -319,9 +319,12 @@ class Tapper:
             maxCharges = stats_json.get('maxCharges', 24)
             logger.info(f"{self.session_name} | Charges: <e>{charges}/{maxCharges}</e>")
             if await self.has_template(http_client=http_client):
-
-                for _ in range(charges):
-                    q = await get_cords_and_color()
+                for _ in range(charges - 1):
+                    try:
+                        q = await get_cords_and_color()
+                    except Exception:
+                        logger.success(f"{self.session_name} | All pixels painted, well done soldier;)")
+                        return
                     coords = q["coord"]
                     color3x = q["color"]
                     yx = coords
@@ -335,7 +338,8 @@ class Tapper:
         except Exception as error:
             logger.error(f"{self.session_name} | Unknown error when painting: {error}")
             await asyncio.sleep(delay=10)
-            await self.paint(http_client=http_client)
+            if retries > 0:
+                await self.paint(http_client=http_client, retries=retries-1)
 
     async def upgrade(self, http_client: aiohttp.ClientSession):
         try:
