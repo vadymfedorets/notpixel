@@ -317,11 +317,11 @@ class Tapper:
                     squares = json.load(file)
 
                 field = squares[random.randint(0, len(squares) - 1)]
-                coords = field["coords"]
+                coords = field["coord"]
                 color3x = field["color"]
 
                 for _ in range(charges):
-                    yx = coords[random.randint(0, len(coords) - 1)]
+                    yx = coords
                     if randint(0, 10) == 5:
                         color = random.choice(colors)
                         logger.info(f"{self.session_name} | Changing color to {color}")
