@@ -356,11 +356,10 @@ class Tapper:
                 with open('bot/points3x/template_data.json', 'r') as file:
                     squares = json.load(file)
 
-                field = squares[random.randint(0, len(squares) - 1)]
-                coords = field["coord"]
-                color3x = field["color"]
-
                 for _ in range(charges):
+                    field = squares[random.randint(0, len(squares) - 1)]
+                    coords = field["coord"]
+                    color3x = field["color"]
                     yx = coords
                     if randint(0, 10) == 5:
                         color = random.choice(colors)
