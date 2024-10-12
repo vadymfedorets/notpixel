@@ -26,6 +26,7 @@ from .headers import headers, headers_squads
 
 from random import randint, choices
 
+from .image_checker import get_cords_and_color
 from ..utils.firstrun import append_line_to_file
 
 
@@ -38,6 +39,7 @@ class Tapper:
         self.main_bot_peer = 'notpixel'
         self.squads_bot_peer = 'notgames_bot'
         self.joined = None
+        self.balance = 0
 
     async def get_tg_web_data(self, proxy: str | None, ref:str, bot_peer:str, short_name:str) -> str:
         if proxy:
@@ -298,7 +300,8 @@ class Tapper:
         paint_request = await http_client.post('https://notpx.app/api/v1/repaint/start',
                                                 json={"pixelId": int(yx), "newColor": color})
         paint_request.raise_for_status()
-        logger.success(f"{self.session_name} | Painted {yx} with color: {color}")
+        logger.success(f"{self.session_name} | Painted {yx} with color: {color} | got +{await self.get_balance(http_client) - self.balance}")
+        logger.success(f"{self.session_name} | Paint reward ")
         await asyncio.sleep(delay=randint(delay_start, delay_end))
 
     async def paint(self, http_client: aiohttp.ClientSession):
@@ -313,13 +316,12 @@ class Tapper:
             color = random.choice(colors)
 
             if await self.has_template(http_client=http_client):
-                with open('bot/points3x/template_data.json', 'r') as file:
-                    squares = json.load(file)
 
                 for _ in range(charges):
-                    field = squares[random.randint(0, len(squares) - 1)]
-                    coords = field["coord"]
-                    color3x = field["color"]
+                    self.balance = await self.get_balance(http_client)
+                    q = await get_cords_and_color()
+                    coords = q["coord"]
+                    color3x = q["color"]
                     yx = coords
                     if randint(0, 10) == 5:
                         color = random.choice(colors)
@@ -328,6 +330,7 @@ class Tapper:
                     await self.make_paint_request(http_client, yx, color3x, 5, 10)
             else:
                 for _ in range(charges):
+                    self.balance = await self.get_balance(http_client)
                     x, y = randint(100, 900), randint(100, 900)
                     yx = f'{int(f"{y}{x}")+1}'
                     if randint(0, 10) == 5:
