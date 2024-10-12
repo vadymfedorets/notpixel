@@ -297,6 +297,8 @@ class Tapper:
     async def make_paint_request(self, http_client: aiohttp.ClientSession, yx, color, delay_start, delay_end):
         paint_request = await http_client.post('https://notpx.app/api/v1/repaint/start',
                                                 json={"pixelId": int(yx), "newColor": color})
+        logger.debug(f"{self.session_name} | Paint request: {yx} {color}")
+        logger.debug(await paint_request.json())
         paint_request.raise_for_status()
         logger.success(f"{self.session_name} | Painted {yx} with color: {color}")
         await asyncio.sleep(delay=randint(delay_start, delay_end))
@@ -316,11 +318,10 @@ class Tapper:
                 with open('bot/points3x/template_data.json', 'r') as file:
                     squares = json.load(file)
 
-                field = squares[random.randint(0, len(squares) - 1)]
-                coords = field["coord"]
-                color3x = field["color"]
-
                 for _ in range(charges):
+                    field = squares[random.randint(0, len(squares) - 1)]
+                    coords = field["coord"]
+                    color3x = field["color"]
                     yx = coords
                     if randint(0, 10) == 5:
                         color = random.choice(colors)
