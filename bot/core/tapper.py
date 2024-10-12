@@ -300,8 +300,13 @@ class Tapper:
         paint_request = await http_client.post('https://notpx.app/api/v1/repaint/start',
                                                 json={"pixelId": int(yx), "newColor": color})
         paint_request.raise_for_status()
-        logger.success(f"{self.session_name} | Painted {yx} with color: {color} | got +{await self.get_balance(http_client) - self.balance}")
-        logger.success(f"{self.session_name} | Paint reward ")
+        paint_request_json = await paint_request.json()
+        cur_balance = paint_request_json.get("balance", self.balance)
+        change = cur_balance - self.balance
+        if change <= 0:
+            change = "?"
+        self.balance = cur_balance
+        logger.success(f"{self.session_name} | Painted {yx} with color: {color} | got <e>+{change}</e>")
         await asyncio.sleep(delay=randint(delay_start, delay_end))
 
     async def paint(self, http_client: aiohttp.ClientSession):
@@ -309,39 +314,28 @@ class Tapper:
             stats = await http_client.get('https://notpx.app/api/v1/mining/status')
             stats.raise_for_status()
             stats_json = await stats.json()
-            charges = stats_json['charges']
-            colors = ("#BE0039", "#6D001A", "#51E9F4",
-                      "#FFFFFF", "#000000", "#E46E6E")
-            
-            color = random.choice(colors)
-
+            charges = stats_json.get('charges', 24)
+            self.balance = stats_json.get('userBalance', 0)
+            maxCharges = stats_json.get('maxCharges', 24)
+            logger.info(f"{self.session_name} | Charges: <e>{charges}/{maxCharges}</e>")
             if await self.has_template(http_client=http_client):
 
                 for _ in range(charges):
-                    self.balance = await self.get_balance(http_client)
                     q = await get_cords_and_color()
                     coords = q["coord"]
                     color3x = q["color"]
                     yx = coords
-                    if randint(0, 10) == 5:
-                        color = random.choice(colors)
-                        logger.info(f"{self.session_name} | Changing color to {color}")
-
                     await self.make_paint_request(http_client, yx, color3x, 5, 10)
             else:
                 for _ in range(charges):
-                    self.balance = await self.get_balance(http_client)
                     x, y = randint(100, 900), randint(100, 900)
                     yx = f'{int(f"{y}{x}")+1}'
-                    if randint(0, 10) == 5:
-                        color = random.choice(colors)
-                        logger.info(f"{self.session_name} | Changing color to {color}")
-                        
-                    await self.make_paint_request(http_client, yx, color, 5, 10)
+                    await self.make_paint_request(http_client, yx, "#000000", 5, 10)
 
         except Exception as error:
             logger.error(f"{self.session_name} | Unknown error when painting: {error}")
-            await asyncio.sleep(delay=3)
+            await asyncio.sleep(delay=10)
+            await self.paint(http_client=http_client)
 
     async def upgrade(self, http_client: aiohttp.ClientSession):
         try:
