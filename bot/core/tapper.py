@@ -186,11 +186,6 @@ class Tapper:
         custom_headers['User-Agent'] = user_agent
         bearer_token = None
         try:
-            response = await http_client.get(url='https://ipinfo.io/ip', timeout=aiohttp.ClientTimeout(20))
-            ip = (await response.text())
-
-            logger.info(f"{self.session_name} | NotGames logging in with proxy IP: {ip}")
-
             custom_headers["Host"] = "api.notcoin.tg"
             custom_headers["bypass-tunnel-reminder"] = "x"
             custom_headers["TE"] = "trailers"
@@ -243,11 +238,16 @@ class Tapper:
             await asyncio.sleep(delay=randint(3, 7))
             await self.login(http_client)
 
-    async def check_proxy(self, http_client: aiohttp.ClientSession, proxy: Proxy) -> None:
+    async def check_proxy(self, http_client: aiohttp.ClientSession, service_name, proxy: Proxy) -> None:
         try:
-            response = await http_client.get(url='https://ipinfo.io/ip', timeout=aiohttp.ClientTimeout(20))
-            ip = (await response.text())
-            logger.info(f"{self.session_name} | Proxy IP: {ip}")
+            response = await http_client.get(url='https://ipinfo.io/json', timeout=aiohttp.ClientTimeout(20))
+            response.raise_for_status()
+
+            response_json = await response.json()
+            ip = response_json.get('ip', 'NO')
+            country = response_json.get('country', 'NO')
+
+            logger.info(f"{self.session_name} | Logging in with proxy IP {ip} and country {country}")
         except Exception as error:
             logger.error(f"{self.session_name} | Proxy: {proxy} | Error: {error}")
 
@@ -490,7 +490,7 @@ class Tapper:
         headers['User-Agent'] = self.user_agent
         async with aiohttp.ClientSession(headers=headers, connector=proxy_conn, trust_env=True) as http_client:
             if proxy:
-                await self.check_proxy(http_client=http_client, proxy=proxy_conn)
+                await self.check_proxy(http_client=http_client, service_name="NotPixel", proxy=proxy_conn)
 
             ref = settings.REF_ID
             link = get_link(ref)
