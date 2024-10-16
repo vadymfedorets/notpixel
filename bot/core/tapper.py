@@ -456,6 +456,16 @@ class Tapper:
         except Exception as error:
             return 0
 
+    async def j_template(self, http_client: aiohttp.ClientSession, template_id):
+        try:
+            resp = await http_client.put(f"https://notpx.app/api/v1/image/template/subscribe/{template_id}")
+            resp.raise_for_status()
+            await asyncio.sleep(randint(1, 3))
+            return resp.status == 204
+        except Exception as error:
+            logger.error(f"Unknown error upon joining a template: {error}")
+            return False
+
     async def join_template(self, http_client: aiohttp.ClientSession):
         try:
             tmpl = await self.notpx_template(http_client)
@@ -526,12 +536,14 @@ class Tapper:
                     await inform(self.user_id, balance)
 
                     if await self.join_template(http_client=http_client):
-                        self.joined = False
-                        delay = randint(60, 120)
-                        logger.info(f"{self.session_name} | Joining to template restart in {delay} seconds.")
-                        await asyncio.sleep(delay=delay)
-                        token_live_time = 0
-                        continue
+                        tmpl_req = await self.j_template(http_client=http_client, template_id=self.template_to_join)
+                        if not tmpl_req:
+                            self.joined = False
+                            delay = randint(60, 120)
+                            logger.info(f"{self.session_name} | Joining to template restart in {delay} seconds.")
+                            await asyncio.sleep(delay=delay)
+                            token_live_time = 0
+                            continue
 
                     if settings.AUTO_DRAW:
                         await self.paint(http_client=http_client)
