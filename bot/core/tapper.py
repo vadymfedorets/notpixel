@@ -131,7 +131,6 @@ class Tapper:
 
             if self.tg_client.is_connected:
                 await self.tg_client.disconnect()
-
             return auth_token
 
         except InvalidSession as error:
