@@ -78,5 +78,5 @@ async def template_to_join(cur_template=0, times_to_fall=10):
         logger.error(f"Server unreachable, retrying in 30 seconds, attempt {10 - times_to_fall + 1}/10")
         await asyncio.sleep(30)
         if times_to_fall > 0:
-            return await get_cords_and_color(cur_template, times_to_fall-1)
+            return await template_to_join(cur_template, times_to_fall-1)
         exit()
