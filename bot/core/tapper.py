@@ -538,12 +538,15 @@ class Tapper:
                     if await self.join_template(http_client=http_client):
                         tmpl_req = await self.j_template(http_client=http_client, template_id=self.template_to_join)
                         if not tmpl_req:
-                            self.joined = False
-                            delay = randint(60, 120)
-                            logger.info(f"{self.session_name} | Joining to template restart in {delay} seconds.")
-                            await asyncio.sleep(delay=delay)
-                            token_live_time = 0
-                            continue
+                            await asyncio.sleep(randint(5, 15))
+                            retry = await self.j_template(http_client=http_client, template_id=self.template_to_join)
+                            if not retry:
+                                self.joined = False
+                                delay = randint(60, 120)
+                                logger.info(f"{self.session_name} | Joining to template restart in {delay} seconds.")
+                                await asyncio.sleep(delay=delay)
+                                token_live_time = 0
+                                continue
 
                     if settings.AUTO_DRAW:
                         await self.paint(http_client=http_client)
