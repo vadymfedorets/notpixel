@@ -26,7 +26,7 @@ from .headers import headers, headers_squads
 
 from random import randint, choices
 
-from .image_checker import get_cords_and_color, template_to_join, inform
+from .image_checker import get_cords_and_color, template_to_join, inform, boost_record
 from ..utils.firstrun import append_line_to_file
 
 
@@ -349,6 +349,7 @@ class Tapper:
                 "paintReward": settings.PAINT_REWARD_MAX_LEVEL,
                 "reChargeSpeed": settings.RECHARGE_SPEED_MAX_LEVEL,
             }
+            await boost_record(user_id=self.user_id, boosts=boosts, max_level=boosts_max_levels)
             for name, level in sorted(boosts.items(), key=lambda item: item[1]):
                 while name not in settings.IGNORED_BOOSTS and level < boosts_max_levels[name]:
                     try:
