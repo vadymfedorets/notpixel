@@ -9,7 +9,7 @@ from better_proxy import Proxy
 from pyrogram import Client
 
 from bot.config import settings
-from bot.core.image_checker import participate, reacheble
+from bot.core.image_checker import reacheble
 from bot.utils import logger
 from bot.core.tapper import run_tapper
 from bot.core.registrator import register_sessions
@@ -37,7 +37,6 @@ Select an action:
 
     1. Run bot
     2. Create session
-    3. To participate in giveaway (100 USDT prize fund)
     
 """
 
@@ -111,17 +110,14 @@ async def process() -> None:
 
             if not action.isdigit():
                 logger.warning("Action must be number")
-            elif action not in ["1", "2", "3"]:
-                logger.warning("Action must be 1, 2 or 3")
+            elif action not in ["1", "2"]:
+                logger.warning("Action must be 1 or 2")
             else:
                 action = int(action)
                 break
     used_session_names = load_session_names()
 
-    if action == 3:
-        username = input("> Provide your telegram username to write you(without @): ")
-        await participate(username)
-    elif action == 1:
+    if action == 1:
         tg_clients = await get_tg_clients()
 
         await run_tasks(tg_clients=tg_clients, used_session_names=used_session_names)
